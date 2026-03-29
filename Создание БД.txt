@@ -1,0 +1,96 @@
+
+-- Удаляем старые таблицы (если есть)
+DROP TABLE IF EXISTS grades CASCADE;
+DROP TABLE IF EXISTS subjects CASCADE;
+DROP TABLE IF EXISTS semesters CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS groups CASCADE;
+
+-- =====================================================
+-- Таблица групп
+-- =====================================================
+CREATE TABLE groups (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- =====================================================
+-- Таблица семестров
+-- =====================================================
+CREATE TABLE semesters (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(20) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL
+);
+
+-- =====================================================
+-- Таблица пользователей
+-- =====================================================
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(200) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'student',
+    group_id INTEGER REFERENCES groups(id) ON DELETE SET NULL
+);
+
+-- =====================================================
+-- Таблица предметов
+-- =====================================================
+CREATE TABLE subjects (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(200) UNIQUE NOT NULL
+);
+
+-- =====================================================
+-- Таблица оценок
+-- =====================================================
+CREATE TABLE grades (
+    id SERIAL PRIMARY KEY,
+    grade INTEGER NOT NULL,
+    date DATE NOT NULL DEFAULT CURRENT_DATE,
+    student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+    semester_id INTEGER REFERENCES semesters(id) ON DELETE SET NULL
+);
+
+-- =====================================================
+-- Наполнение тестовыми данными
+-- =====================================================
+
+-- Группы
+INSERT INTO groups (name) VALUES 
+    ('ИС-22'),
+    ('П-21'),
+    ('Э-20');
+
+-- Семестры
+INSERT INTO semesters (name, start_date, end_date) VALUES 
+    ('Осень 2025', '2025-09-01', '2025-12-31'),
+    ('Весна 2026', '2026-02-01', '2026-05-31');
+
+-- Предметы
+INSERT INTO subjects (name) VALUES
+    ('Математика'),
+    ('Физика'),
+    ('Программирование'),
+    ('История'),
+    ('Английский язык');
+
+-- Пользователи (пароль для всех: 123)
+INSERT INTO users (username, password_hash, role, group_id) VALUES
+    ('teacher1', 'scrypt:32768:8:1$6bsKXrL1Ms03wBAO$830e7db4d645bfe5baa7a906c16f8c3422b246219bf1747ad7bdc673675c917f26b7d5c62076d7ff2fb3eccb6f2c83b94abdfc97e76789cc7566503cb343c6a8', 'teacher', NULL),
+    ('teacher2', 'scrypt:32768:8:1$6bsKXrL1Ms03wBAO$830e7db4d645bfe5baa7a906c16f8c3422b246219bf1747ad7bdc673675c917f26b7d5c62076d7ff2fb3eccb6f2c83b94abdfc97e76789cc7566503cb343c6a8', 'teacher', NULL),
+    ('student1', 'scrypt:32768:8:1$6bsKXrL1Ms03wBAO$830e7db4d645bfe5baa7a906c16f8c3422b246219bf1747ad7bdc673675c917f26b7d5c62076d7ff2fb3eccb6f2c83b94abdfc97e76789cc7566503cb343c6a8', 'student', 1),
+    ('student2', 'scrypt:32768:8:1$6bsKXrL1Ms03wBAO$830e7db4d645bfe5baa7a906c16f8c3422b246219bf1747ad7bdc673675c917f26b7d5c62076d7ff2fb3eccb6f2c83b94abdfc97e76789cc7566503cb343c6a8', 'student', 1),
+    ('student3', 'scrypt:32768:8:1$6bsKXrL1Ms03wBAO$830e7db4d645bfe5baa7a906c16f8c3422b246219bf1747ad7bdc673675c917f26b7d5c62076d7ff2fb3eccb6f2c83b94abdfc97e76789cc7566503cb343c6a8', 'student', 2);
+
+-- Оценки
+INSERT INTO grades (grade, date, student_id, subject_id, semester_id) VALUES
+    (5, '2025-01-15', 3, 1, 1),  -- student1, математика, осень 2025
+    (4, '2025-01-20', 3, 2, 1),  -- student1, физика
+    (3, '2025-02-10', 4, 3, 1),  -- student2, программирование
+    (1, '2025-02-15', 4, 4, 1),  -- student2, история (зачёт сдан)
+    (0, '2025-03-01', 5, 5, 1),  -- student3, английский (не сдан)
+    (5, '2025-06-10', 5, 1, 2);  -- student3, математика, весна 2026

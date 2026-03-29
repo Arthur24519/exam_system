@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="jumbotron">
+        <h1 class="display-4">Добро пожаловать!</h1>
+        <p class="lead">Система учёта экзаменов и зачётов предназначена для автоматизации промежуточной аттестации студентов.</p>
+        <hr class="my-4">
+        <p>Для работы необходимо войти в систему, используя свои учётные данные.</p>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('login') }}" role="button">Войти</a>
+    </div>
+{% endblock %}

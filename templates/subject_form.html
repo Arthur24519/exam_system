@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ 'Редактировать' if subject else 'Добавить' }} предмет</h2>
+<form method="post">
+    <div class="mb-3">
+        <label>Название предмета:</label>
+        <input type="text" name="name" class="form-control" value="{{ subject.name if subject else '' }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+    <a href="{{ url_for('subjects_list') }}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}
