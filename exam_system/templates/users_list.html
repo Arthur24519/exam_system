@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Управление пользователями</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Имя пользователя</th>
+            <th>Роль</th>
+            <th>Группа</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ 'Преподаватель' if user.role == 'teacher' else 'Студент' }}</td>
+            <td>
+                <form method="post" action="{{ url_for('user_edit', id=user.id) }}" style="display:inline;">
+                    <select name="group_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">-- Не выбрано --</option>
+                        {% for group in groups %}
+                        <option value="{{ group.id }}" {% if user.group_id == group.id %}selected{% endif %}>{{ group.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </td>
+            <td>
+                <a href="{{ url_for('user_reset_password', id=user.id) }}" class="btn btn-sm btn-warning" onclick="return confirm('Сбросить пароль на 123?')">Сбросить пароль</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

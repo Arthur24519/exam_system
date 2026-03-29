@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Личный кабинет</h2>
+<p>Добрый день, {{ current_user.username }}!</p>
+
+{% if is_teacher %}
+    <!-- Фильтры для преподавателя -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Фильтры
+        </div>
+        <div class="card-body">
+            <form method="get" action="{{ url_for('dashboard') }}" class="row g-3">
+                <div class="col-md-3">
+                    <label>Группа</label>
+                    <select name="group_id" class="form-control">
+                        <option value="">Все группы</option>
+                        {% for group in groups %}
+                        <option value="{{ group.id }}" {% if request.args.get('group_id')|int == group.id %}selected{% endif %}>{{ group.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Предмет</label>
+                    <select name="subject_id" class="form-control">
+                        <option value="">Все предметы</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}" {% if request.args.get('subject_id')|int == subject.id %}selected{% endif %}>{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Семестр</label>
+                    <select name="semester_id" class="form-control">
+                        <option value="">Все семестры</option>
+                        {% for semester in semesters %}
+                        <option value="{{ semester.id }}" {% if request.args.get('semester_id')|int == semester.id %}selected{% endif %}>{{ semester.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 align-self-end">
+                    <button type="submit" class="btn btn-primary">Применить</button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Сбросить</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h3>Все оценки студентов</h3>
+    <a href="{{ url_for('add_grade') }}" class="btn btn-success mb-3">+ Добавить новую оценку</a>
+{% else %}
+    <h3>Ваши оценки</h3>
+{% endif %}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Студент</th>
+            <th>Предмет</th>
+            <th>Оценка</th>
+            <th>Дата</th>
+            <th>Семестр</th>
+            {% if is_teacher %}
+                <th>Действия</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for grade in grades %}
+        <tr>
+            <td>{{ grade.student.username }}</td>
+            <td>{{ grade.subject.name }}</td>
+            <td>{{ grade.grade }}</td>
+            <td>{{ grade.date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ grade.semester.name if grade.semester else '—' }}</td>
+            {% if is_teacher %}
+            <td>
+                <a href="{{ url_for('edit_grade', grade_id=grade.id) }}" class="btn btn-sm btn-warning">Редактировать</a>
+                <a href="{{ url_for('delete_grade', grade_id=grade.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Удалить оценку?');">Удалить</a>
+            </td>
+            {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="{% if is_teacher %}6{% else %}5{% endif %}" class="text-center">Оценок пока нет.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_teacher %}
+    <!-- Простая статистика -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-header">Всего оценок</div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ grades|length }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-header">Средний балл</div>
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {% set ns = namespace(sum=0, count=0) %}
+                        {% for g in grades %}
+                            {% set ns.sum = ns.sum + g.grade %}
+                            {% set ns.count = ns.count + 1 %}
+                        {% endfor %}
+                        {{ (ns.sum / ns.count)|round(2) if ns.count > 0 else 'Н/Д' }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-header">Количество студентов</div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ grades|map(attribute='student_id')|unique|list|length }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
